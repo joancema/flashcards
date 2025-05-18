@@ -1,0 +1,359 @@
+:root {
+  --primary-color: #4a90e2;
+  --secondary-color: #2c3e50;
+  --background-color: #f5f6fa;
+  --card-background: #ffffff;
+  --text-color: #2c3e50;
+  --border-color: #dcdde1;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--primary-color);
+}
+
+h2 {
+  margin-bottom: 1rem;
+  color: var(--secondary-color);
+}
+
+.main-action-button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: background-color 0.2s;
+  display: block;
+  margin: 0 auto 2rem auto; /* Center button and add margin bottom */
+}
+
+.main-action-button:hover {
+  background-color: #357abd;
+}
+
+.flashcard-form {
+  /* background-color: var(--card-background); */ /* Removed as modal-content handles this */
+  /* padding: 2rem; */ /* Removed as modal-content handles this */
+  /* border-radius: 8px; */ /* Removed as modal-content handles this */
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */ /* Removed as modal-content handles this */
+  margin-bottom: 0; /* Adjusted from 2rem as it's inside a modal now */
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+textarea, input, select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #357abd;
+}
+
+.flashcards-container {
+  margin-bottom: 2rem;
+}
+
+.flashcard {
+  background-color: var(--card-background);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.flashcard h3 {
+  margin-bottom: 0.5rem;
+}
+
+.flashcard img {
+  max-width: 200px;
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  margin: 1rem 0;
+  border-radius: 4px;
+  display: block;
+}
+
+.study-mode-trigger {
+  text-align: center; /* Center the button */
+  margin-bottom: 2rem;
+}
+
+.card {
+  perspective: 1000px;
+  margin: 2rem 0;
+  position: relative;
+  min-height: 300px;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.card-front, .card-back {
+  background-color: var(--card-background);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  backface-visibility: hidden;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+.card.flipped .card-front {
+  transform: rotateY(180deg);
+}
+
+.card.flipped .card-back {
+  transform: rotateY(0);
+}
+
+.card .hidden {
+  display: none;
+}
+
+.study-question, .study-answer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  transform: translateZ(20px);
+  padding: 1rem;
+}
+
+.study-question img, .study-answer img {
+  max-width: 200px;
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.study-question p, .study-answer p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.category-tag {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.875rem;
+}
+
+.flashcard-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Styles for the new flashcards table */
+.flashcards-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--card-background);
+  border-radius: 8px;
+  overflow: hidden; /* For border-radius to work on table */
+}
+
+.flashcards-table th, .flashcards-table td {
+  border: 1px solid var(--border-color);
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.flashcards-table th {
+  background-color: #f0f0f0;
+  color: var(--secondary-color);
+  font-weight: 600;
+}
+
+.flashcard-thumbnail {
+  max-width: 80px;
+  max-height: 80px;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
+
+.flashcard-actions-table button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  margin-right: 0.3rem;
+}
+
+.category-tag-table {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  margin-right: 0.25rem;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background-color: var(--card-background);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modal-buttons button {
+  flex: 1;
+}
+
+.modal-buttons button[type="button"] {
+  background-color: var(--secondary-color);
+}
+
+.modal-buttons button[type="button"]:hover {
+  background-color: #1a252f;
+}
+
+.study-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.study-controls button {
+  padding: 0.6rem 1.2rem;
+}
+
+/* Responsive adjustments for study controls on smaller screens */
+@media (max-width: 600px) {
+  .study-controls {
+    flex-direction: column; /* Stack buttons vertically */
+    align-items: stretch; /* Make buttons take full width of container */
+    gap: 0.75rem; /* Adjust gap for vertical stacking */
+  }
+
+  .study-controls button {
+    padding: 0.75rem 1rem; /* Adjust padding for better fit */
+    font-size: 0.95rem; /* Slightly reduce font size if needed */
+  }
+
+  .modal-content {
+    padding: 1.5rem; /* Reduce padding of modal content on small screens */
+  }
+
+  /* Reduce size of study card image on small screens */
+  #studyModal .study-question img,
+  #studyModal .study-answer img {
+    max-width: 150px; /* Further reduce max-width */
+    height: 100px;    /* Reduce height */
+    margin: 0.5rem 0; /* Reduce vertical margin */
+  }
+}
