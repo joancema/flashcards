@@ -73,11 +73,25 @@ app.innerHTML = `
 
     <div class="flashcards-container">
       <h2>Your Flashcards</h2>
+      <div class="search-container">
+        <input 
+          type="text" 
+          id="searchFlashcards" 
+          placeholder="Search flashcards..." 
+          class="search-input"
+        >
+      </div>
       <div id="flashcardsList"></div>
     </div>
 
     <div class="study-mode-trigger">
-      <button id="startStudy" class="main-action-button">Start Study Session</button>
+      <div class="study-controls-container">
+        <select id="studyCategorySelect" class="study-category-select">
+          <option value="">All Categories</option>
+          <!-- Categories will be populated dynamically -->
+        </select>
+        <button id="startStudy" class="main-action-button">Start Study Session</button>
+      </div>
     </div>
 
     <div id="studyModal" class="modal hidden">
@@ -136,6 +150,9 @@ app.innerHTML = `
 // State management
 let currentFlashcards: Flashcard[] = []
 let currentStudyIndex = 0
+let currentPage = 1
+const itemsPerPage = 10
+let searchFilter = ''
 
 // DOM Elements
 const flashcardForm = document.getElementById('flashcardForm') as HTMLFormElement
@@ -155,6 +172,7 @@ const closeCreateModalButton = document.getElementById('closeCreateModal')!
 // New DOM elements for Study Modal
 const studyModal = document.getElementById('studyModal')!
 const closeStudyModalButton = document.getElementById('closeStudyModal')!
+const studyCategorySelect = document.getElementById('studyCategorySelect') as HTMLSelectElement
 
 // Load categories
 async function loadCategories() {
@@ -168,15 +186,15 @@ async function loadCategories() {
     return
   }
 
-  // currentCategories = data
   const categoryOptions = data
     .map(category => `<option value="${category.id}">${category.name}</option>`)
     .join('')
   
-  // Update both category selectors
+  // Update all category selectors
   categoriesSelect.innerHTML = categoryOptions
   const editCategories = document.getElementById('editCategories') as HTMLSelectElement
   editCategories.innerHTML = categoryOptions
+  studyCategorySelect.innerHTML = `<option value="">All Categories</option>${categoryOptions}`
 }
 
 // Load flashcards
@@ -203,12 +221,42 @@ async function loadFlashcards() {
   renderFlashcards()
 }
 
+// Add event listener for search input after DOM is loaded
+document.getElementById('searchFlashcards')?.addEventListener('input', (e) => {
+  searchFilter = (e.target as HTMLInputElement).value
+  currentPage = 1 // Reset to first page when searching
+  renderFlashcards()
+})
+
 // Render flashcards
 function renderFlashcards() {
   if (currentFlashcards.length === 0) {
-    flashcardsList.innerHTML = '<p>No flashcards created yet. Create one above!</p>';
-    return;
+    flashcardsList.innerHTML = '<p>No flashcards created yet. Create one above!</p>'
+    return
   }
+
+  // Filter flashcards based on search
+  const filteredFlashcards = currentFlashcards.filter(flashcard => {
+    const searchLower = searchFilter.toLowerCase()
+    return flashcard.question.toLowerCase().includes(searchLower) ||
+           flashcard.answer.toLowerCase().includes(searchLower)
+  })
+
+  if (filteredFlashcards.length === 0) {
+    flashcardsList.innerHTML = '<p>No flashcards found matching your search.</p>'
+    return
+  }
+
+  // Reset to first page if current page is out of bounds
+  const totalPages = Math.ceil(filteredFlashcards.length / itemsPerPage)
+  if (currentPage > totalPages) {
+    currentPage = 1
+  }
+
+  // Calculate pagination
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentFlashcardsPage = filteredFlashcards.slice(startIndex, endIndex)
 
   const tableHeader = `
     <thead>
@@ -220,9 +268,9 @@ function renderFlashcards() {
         <th>Actions</th>
       </tr>
     </thead>
-  `;
+  `
 
-  const tableBody = currentFlashcards
+  const tableBody = currentFlashcardsPage
     .map(flashcard => `
       <tr>
         <td>
@@ -243,10 +291,50 @@ function renderFlashcards() {
         </td>
       </tr>
     `)
-    .join('');
+    .join('')
 
-  flashcardsList.innerHTML = `<table class="flashcards-table">${tableHeader}<tbody>${tableBody}</tbody></table>`;
+  // Create pagination controls
+  const paginationControls = `
+    <div class="pagination-controls">
+      <button 
+        onclick="changePage(${currentPage - 1})" 
+        ${currentPage === 1 ? 'disabled' : ''}
+        class="pagination-button"
+      >
+        Previous
+      </button>
+      <span class="pagination-info">
+        Page ${currentPage} of ${totalPages}
+      </span>
+      <button 
+        onclick="changePage(${currentPage + 1})" 
+        ${currentPage === totalPages ? 'disabled' : ''}
+        class="pagination-button"
+      >
+        Next
+      </button>
+    </div>
+  `
+
+  flashcardsList.innerHTML = `
+    <div class="table-container">
+      <table class="flashcards-table">${tableHeader}<tbody>${tableBody}</tbody></table>
+      ${paginationControls}
+    </div>
+  `
 }
+
+// Function to change page
+function changePage(newPage: number) {
+  const totalPages = Math.ceil(currentFlashcards.length / itemsPerPage)
+  if (newPage >= 1 && newPage <= totalPages) {
+    currentPage = newPage
+    renderFlashcards()
+  }
+}
+
+// Make changePage available globally
+;(window as any).changePage = changePage
 
 // Create new flashcard
 async function createFlashcard(event: Event) {
@@ -307,19 +395,36 @@ async function deleteFlashcard(id: number) {
 
 // Study mode functions
 function startStudySession() {
-  if (currentFlashcards.length === 0) {
-    alert('No flashcards available to study!')
+  // Get selected category
+  const categoryId = studyCategorySelect.value ? Number(studyCategorySelect.value) : null
+
+  // Filter flashcards by category if one is selected
+  const flashcardsToStudy = categoryId 
+    ? currentFlashcards.filter(flashcard => 
+        flashcard.flashcard_categories.some(fc => fc.category_id === categoryId)
+      )
+    : currentFlashcards
+
+  if (flashcardsToStudy.length === 0) {
+    alert(categoryId 
+      ? 'No flashcards available in the selected category!' 
+      : 'No flashcards available to study!'
+    )
     return
   }
 
-  // studyMode = true
+  // Store filtered flashcards for study session
+  currentStudyFlashcards = flashcardsToStudy
   currentStudyIndex = 0
-  studyModal.classList.remove('hidden') // Show the modal
+  studyModal.classList.remove('hidden')
   showCurrentCard()
 }
 
+// Add state for study session flashcards
+let currentStudyFlashcards: Flashcard[] = []
+
 function showCurrentCard() {
-  const flashcard = currentFlashcards[currentStudyIndex]
+  const flashcard = currentStudyFlashcards[currentStudyIndex]
   const imageHtml = flashcard.image_url ? `<img src="${flashcard.image_url}" alt="Flashcard image">` : ''
   
   // Front of the card shows question
@@ -344,37 +449,65 @@ function showCurrentCard() {
 }
 
 function flipCard() {
-  const card = document.querySelector('#studyModal .card')! // ensure we target the card in the study modal
+  const card = document.querySelector('#studyModal .card')!
   card.classList.toggle('flipped')
 
   // Speak the answer if the card is flipped to the back
-  if (card.classList.contains('flipped') && currentFlashcards.length > 0) {
-    const answerText = currentFlashcards[currentStudyIndex].answer
+  if (card.classList.contains('flipped') && currentStudyFlashcards.length > 0) {
+    const answerText = currentStudyFlashcards[currentStudyIndex].answer
     if (answerText) {
       const utterance = new SpeechSynthesisUtterance(answerText)
-      // You can customize voice, rate, pitch etc. here if needed
-      // For example: utterance.lang = 'es-ES';
+      
+      // Set language to English
+      utterance.lang = 'en-US'
+      
+      // Try to find an English voice
+      const voices = speechSynthesis.getVoices()
+      const englishVoice = voices.find(voice => 
+        voice.lang.includes('en-') && voice.name.includes('Google') // Prefer Google voices
+      ) || voices.find(voice => 
+        voice.lang.includes('en-') // Fallback to any English voice
+      )
+      
+      if (englishVoice) {
+        utterance.voice = englishVoice
+      }
+
+      // Set properties for better English pronunciation
+      utterance.rate = 0.9 // Slightly slower for better clarity
+      utterance.pitch = 1.0 // Normal pitch
+      
+      // Cancel any ongoing speech before starting new one
+      speechSynthesis.cancel()
+      
+      // Speak the text
       speechSynthesis.speak(utterance)
-    } else {
-      // Optionally, speak a message if there's no answer text
-      // const noAnswerUtterance = new SpeechSynthesisUtterance("No answer provided.");
-      // speechSynthesis.speak(noAnswerUtterance);
     }
   } else {
-    // If flipped back to front, or no flashcards, cancel any ongoing speech
+    // If flipped back to front, cancel any ongoing speech
     speechSynthesis.cancel()
+  }
+}
+
+// Initialize voices when they become available
+// This is needed because voices might not be loaded immediately
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = () => {
+    // This will ensure voices are loaded
+    const voices = speechSynthesis.getVoices()
+    console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`))
   }
 }
 
 async function nextCard() {
   // Record view
-  const currentFlashcard = currentFlashcards[currentStudyIndex]
+  const currentFlashcard = currentStudyFlashcards[currentStudyIndex]
   await supabase
     .from('flashcard_views')
     .insert([{ flashcard_id: currentFlashcard.id }])
 
   // Move to next card
-  currentStudyIndex = (currentStudyIndex + 1) % currentFlashcards.length
+  currentStudyIndex = (currentStudyIndex + 1) % currentStudyFlashcards.length
   showCurrentCard()
 }
 
@@ -405,7 +538,6 @@ closeStudyModalButton.addEventListener('click', () => {
 
 function closeStudyModalFunction() {
   studyModal.classList.add('hidden')
-  // studyMode = false
   // Optionally, clear the card content when closing
   cardFront.innerHTML = ''
   cardBack.innerHTML = ''

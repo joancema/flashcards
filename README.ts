@@ -28,3 +28,10 @@ create table flashcard_views (
   viewed_at timestamp with time zone default now()
 );
 */ 
+// npm run build
+// git checkout gh-pages
+// git add .
+// git commit -m "Deploy"
+// git push origin gh-pages --force
+// git checkout main
+// npm run dev
